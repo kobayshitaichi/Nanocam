@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import transforms
 import pytorch_lightning as pl
-from torchmetrics.functional import accuracy
+from torchmetrics.functional import accuracy, recall, specificity
 import matplotlib.pyplot as plt
 import pickle
 import argparse

@@ -2,7 +2,6 @@ import os
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from PIL import Image
-import PIL
 import torch
 import torch.utils.data as data
 import torch.nn as nn
@@ -11,18 +10,21 @@ import torch.optim as optim
 from torchvision import transforms
 import pytorch_lightning as pl
 from torchmetrics.functional import accuracy
-import matplotlib.pyplot as plt
-import cv2
+
+import random
 
 def make_filepath_list():
     train_file_list = []
     valid_file_list = []
-
+    num_sumples = len(os.listdir('../dataset/train/images/off'))
     for top_dir in os.listdir('../dataset/train/images/'):
         file_dir = os.path.join('../dataset/train/images/',top_dir)
         if file_dir == '../dataset/train/images/._.DS_Store' or file_dir == '../dataset/train/images/.DS_Store':
             continue
         file_list = os.listdir(file_dir)
+        random.shuffle(file_list)
+        file_list = file_list[:num_sumples]
+
         
 
         #８割を学習データ、２割を検証データ
@@ -58,37 +60,6 @@ print(train_file_list[:3])
 print('検証データ数 : ', len(valid_file_list))
 print(valid_file_list[:3])
 
-class ImageTransform(object):
-    def __init__(self,resize,mean,std):
-        self.data_transform = {
-            'train': transforms.Compose([ 
-                #データオーグメンテーション
-                transforms.RandomHorizontalFlip(),
-                #画像をresizexresizeの大きさに統一する
-                transforms.Resize((resize,resize)),
-                #Tensor型に変換する
-                transforms.ToTensor(),
-                #色情報の標準化
-                transforms.Normalize(mean,std)
-            ]),
-            'valid': transforms.Compose([
-                transforms.Resize((resize,resize)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean,std)
-            ]),
-            'test': transforms.Compose([
-                transforms.Resize((resize,resize)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean,std)
-            ])
-        }
-    def __call__(self, img, phase='train'):
-        return self.data_transform[phase](img)
-
-resize = 300
-mean = (0.5,0.5,0.5)
-std = (0.5,0.5,0.5)
-transform = ImageTransform(resize,mean,std)
 
 class ImageTransform(object):
     def __init__(self,resize,mean,std):
@@ -173,16 +144,16 @@ valid_dataset = SurgeryDataset(
 index = 0
 
 #バッチサイズの指定
-batch_size = 16
+batch_size = 1
 
 #DataLoaderを作成
 train_dataloader = data.DataLoader(
     train_dataset, batch_size=batch_size,
-    num_workers=16,shuffle=True
+    num_workers=1,shuffle=True
 )
 
 valid_dataloader = data.DataLoader(
-    valid_dataset,batch_size=16,num_workers=16,shuffle=True
+    valid_dataset,batch_size=1,num_workers=1,shuffle=True
 )
 
 batch_iterator = iter(train_dataloader)
@@ -292,7 +263,7 @@ es = pl.callbacks.EarlyStopping(monitor='val_loss')
 trainer = pl.Trainer(
     max_epochs=20,
     callbacks=[es],
-    gpus = 1,
+    gpus = 0,
 )
 
 trainer.fit(
@@ -301,4 +272,4 @@ trainer.fit(
     val_dataloaders=valid_dataloader,
 )
 
-torch.save(net.state_dict(),'../weights/model2.pt')
+torch.save(net.state_dict(),'../models/model.pth')

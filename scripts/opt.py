@@ -40,9 +40,6 @@ def opt(start_frame,end_frame,interval_frames,file_path):
         "maxLevel": 2,  # ピラミッド数 (デフォルト0で、2の場合は1/4の画像まで使われる)
         "criteria": (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)  # 探索アルゴリズムの終了条件
     }
-    # 可視化用
-    color = np.random.randint(0, 255, (200, 3))
-    mask = np.zeros_like(prev_frame)
     
     for i in range(start_frame + interval_frames, end_frame + 1, interval_frames):
         try:
